@@ -6,11 +6,7 @@ PROBLEM_NAME = "Zika Simulation"
 PROBLEM_VERSION = "0.1"
 PROBLEM_AUTHORS = ['Uyen Tran', 'Brian Moran']
 PROBLEM_CREATION_DATE = "27-APR-2017"
-PROBLEM_DESC = \
-    '''This formulation of the Eight Puzzle problem with heuristics uses generic
-    Python 3 constructs and has been tested with Python 3.4.
-    It is designed to work according to the QUIET tools interface, Version 0.2.
-    '''
+PROBLEM_DESC = ""
 
 
 # </METADATA>
@@ -74,10 +70,14 @@ class Operator:
 
 # <COMMON_CODE>
 def can_spend(state, spending):
+    """
+    :spending: a map of category to cost. It must includes 4 key: clinic, awareness, safe_sex, mosquito
+    """
     data = state.data
     cost = 0
     if spending['clinic'] == 100:
         cost = 1000000
+        # TODO: adjust the cost based on currect infected
     if spending['awareness'] == 100:
         cost = 200000
     if spending['safe_sex'] == 100:
@@ -93,10 +93,14 @@ def can_spend(state, spending):
 
 
 def spend(state, spending):
+    """
+    :spending: a map of category to cost. It must includes 4 key: clinic, awareness, safe_sex, mosquito
+    """
     data = state.data
     cost = 0
     if spending['clinic'] == 100:
         cost = 1000000
+        # TODO: adjust the cost based on currect infected
     if spending['awareness'] == 100:
         cost = 200000
     if spending['safe_sex'] == 100:
@@ -108,8 +112,10 @@ def spend(state, spending):
     additional_fund = 1000000 if state.depth % 4 == 0 and state.depth != 0 else 0
 
     new_data = data.copy()
-    new_state = State(new_data, state)
+    new_state = State(new_data, state) # Assign parent State to new State for depth increment
     new_data['fund'] += additional_fund - cost
+    
+    # TODO: Need to change current infected
 
     return new_state
 
@@ -140,7 +146,7 @@ def create_spending_helper(spending_list, spending, total_cost, category_number)
     Helper for creating more spending cases depending on cost step. One of spending map could be:
     {'clinic': 40, 'awareness': 30, 'mosquito': 10, 'safe_sex': 20}
     
-    REMOVE THIS NOTE: This function can be useful later
+    REMOVE THIS NOTE: This function can be useful later.
     """
     if category_number == 0:
         if total_cost == 100:
@@ -159,6 +165,9 @@ def create_spending_helper(spending_list, spending, total_cost, category_number)
 
 
 def create_operators():
+    """
+    :return: A list of Operator object from function can_spend, function spend, and a list of spending map
+    """
     spending_list = create_spending()
     operators = []
 
