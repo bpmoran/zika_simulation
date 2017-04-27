@@ -18,6 +18,7 @@ PROBLEM_DESC = \
 
 CATEGORIES = ['clinic', 'awareness', 'mosquito', 'safe_sex']  # and maybe 'fundraising'
 
+
 # <CLASS>
 class State:
     def __init__(self, data, upper_state=None):
@@ -38,7 +39,7 @@ class State:
         if not (type(self) == type(other)):
             return False
         else:
-            return self.data == other.tiles
+            return self.data == other.data
 
     def __hash__(self):
         return (str(self)).__hash__()
@@ -72,22 +73,45 @@ class Operator:
 
 
 # <COMMON_CODE>
-def can_spend(state):
-    # TODO
+def can_spend(state, spending):
+    data = state.data
+    cost = 0
+    if spending['clinic'] == 100:
+        cost = 1000000
+    if spending['awareness'] == 100:
+        cost = 200000
+    if spending['safe_sex'] == 100:
+        cost = 500000
+    if spending['mosquito'] == 100:
+        cost = 100000
 
-    # If the fund still remains
+    # Funding every 4 state
+    additional_fund = 1000000 if state.depth % 4 == 0 and state.depth != 0 else 0
 
-    # If there's remain infected
+    # If the fund still remains and there's still infected
+    return data['fund'] + additional_fund >= cost and data['infected'] > 0
 
-    return True
 
+def spend(state, spending):
+    data = state.data
+    cost = 0
+    if spending['clinic'] == 100:
+        cost = 1000000
+    if spending['awareness'] == 100:
+        cost = 200000
+    if spending['safe_sex'] == 100:
+        cost = 500000
+    if spending['mosquito'] == 100:
+        cost = 100000
 
-def spend(state):
-    """
-    
-    """
+    # Funding every 4 state
+    additional_fund = 1000000 if state.depth % 4 == 0 and state.depth != 0 else 0
 
-    return State({})
+    new_data = data.copy()
+    new_state = State(new_data, state)
+    new_data['fund'] += additional_fund - cost
+
+    return new_state
 
 
 def create_spending():
@@ -101,12 +125,12 @@ def create_spending():
     # create_spending_helper(spending_list, [], 0, len(CATEGORIES))
 
     for i in range(len(CATEGORIES)):
-        spending_map = {}
+        spending = {}
         for k in range(len(CATEGORIES)):
             category = CATEGORIES[k]
             cost = 100 if i == k else 0
-            spending_map[category] = cost
-        spending_list.append(spending_map)
+            spending[category] = cost
+        spending_list.append(spending)
 
     return spending_list
 
@@ -137,13 +161,18 @@ def create_spending_helper(spending_list, spending, total_cost, category_number)
 def create_operators():
     spending_list = create_spending()
     operators = []
-    # TODO
+
+    for spending_item in spending_list:
+        name = ""
+        operand = lambda state, spending=spending_item: can_spend(state, spending)
+        transf = lambda state, spending=spending_item: spend(state, spending)
+        operators.append(Operator(name, operand, transf))
+
     return operators
 
 
 def goal_test(state):
-    # TODO
-    return True
+    return False
 
 
 def goal_message(state):
@@ -160,7 +189,7 @@ def h_heuristics(state):
 
 # <INITIAL_STATE>
 INITIAL_STATE = State({'population': 7000000000, 'infected': 1000000, 'fund': 1000000})
-CREATE_INITIAL_STATE = lambda data: State(data) if data is not None else INITIAL_STATE
+CREATE_INITIAL_STATE = lambda: INITIAL_STATE
 # </INITIAL_STATE>
 
 # <OPERATORS>
