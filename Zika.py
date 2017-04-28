@@ -3,7 +3,6 @@ Brian Moran, Uyen Tran
 Assignment 4 - Wicked Problem - Reducing Zika Virus
 '''
 
-
 '''
 Brian TO DO:
 1) infection functions
@@ -24,15 +23,18 @@ PROBLEM_DESC = ""
 
 
 CATEGORIES = ['clinic', 'awareness', 'mosquito', 'safe_sex']  # and maybe 'fundraising'
+INITIAL_SPENDING = {category: 0 for category in CATEGORIES}
+INITIAL_DATA = {'population': 1000000, 'infected': 0, 'incidence_rate': (114 / 100000), 'fund': 10000000}
 
 
 # <CLASS>
 class State:
-    def __init__(self, data, upper_state=None):
+    def __init__(self, data, spending, upper_state=None):
         """
         :param data: A map of variables: total_population, population_infected, incidence_rate, funds_remaining
         """
         self.data = data
+        self.spending = spending;
         self.data['infected'] = self.data['population'] * self.data['incidence_rate']
         self.depth = 0
         self.op_applied = None
@@ -41,7 +43,8 @@ class State:
             self.depth = upper_state.depth + 1
 
     def __str__(self):
-        return str(self.data)
+        clone_data = {k: round(v, 2) for k, v in self.data.items()}
+        return 'Status: ' + str(clone_data) + '\nSpending: ' + str(self.spending) + '\n'
 
     def __eq__(self, other):
         if not (type(self) == type(other)):
@@ -53,7 +56,7 @@ class State:
         return (str(self)).__hash__()
 
     def __copy__(self):
-        return State(self.data.copy())
+        return State(self.data.copy(), self.spending.copy())
 
     def __lt__(self, other):
         return self.h() + self.depth < other.h() + other.depth
@@ -88,8 +91,7 @@ def can_spend(state, spending):
     data = state.data
     cost = 0
     if spending['clinic'] == 100:
-        cost = 1000000
-        # TODO: adjust the cost based on currect infected
+        cost = state.data['infected'] * 10000
     if spending['awareness'] == 100:
         cost = 200000
     if spending['safe_sex'] == 100:
@@ -101,7 +103,8 @@ def can_spend(state, spending):
     additional_fund = 1000000 if state.depth % 4 == 0 and state.depth != 0 else 0
 
     # If the fund still remains and there's still infected
-    return True#data['fund'] + additional_fund >= cost and data['infected'] > 0
+    return data['fund'] + additional_fund >= cost and data['infected'] > 0
+
 
 # spend does a lot of the actual work.
 def spend(state, spending):
@@ -111,7 +114,7 @@ def spend(state, spending):
     data = state.data
     cost = 0
     if spending['clinic'] == 100:
-        cost = state.data['infected'] * 10000 # cost ='s the number of people infected * $5000 for treatment
+        cost = state.data['infected'] * 10000  # cost ='s the number of people infected * $5000 for treatment
     if spending['awareness'] == 100:
         cost = 200000
     if spending['safe_sex'] == 100:
@@ -132,17 +135,17 @@ def spend(state, spending):
     '''
 
     # updates the infection rate
-    base_rate = INCIDENCE_RATES[(state.depth+1) % 4] # new_state hasn't been generated yet, so state.depth + 1
+    base_rate = INCIDENCE_RATES[(state.depth + 1) % 4]  # new_state hasn't been generated yet, so state.depth + 1
     new_data['incidence_rate'] = base_rate - (base_rate * reduction_of_rate(spending))
 
     # updates the number of people infected
     new_data['infected'] = round(new_data['population'] * new_data['incidence_rate'])
-    new_state = State(new_data, state)  # Assign parent State to new State for depth increment
+    new_state = State(new_data, spending, state)  # Assign parent State to new State for depth increment
 
     # updates op_applied
 
-
     return new_state
+
 
 ''' 
 the create_spending function was made such that it is expandable in a manner which allows the blending of 
@@ -150,6 +153,8 @@ zika containment strategies. Currently, the function sets the strategy-blend to 
 Subsequent versions of this program would all for the allocation of funds to multiple stragegies in a quarter in order to 
 produce the most effective results, balancing cost and efficacy. 
 '''
+
+
 def create_spending():
     """
     :return: a list of spending map. Each map should have category to cost
@@ -160,14 +165,11 @@ def create_spending():
     spending_list = []
     # create_spending_helper(spending_list, [], 0, len(CATEGORIES))
 
-    for i in range(len(CATEGORIES)):
-        spending = {}
-        for k in range(len(CATEGORIES)):
-            category = CATEGORIES[k]
-            cost = 100 if i == k else 0
-            spending[category] = cost
+    for category in CATEGORIES:
+        spending = INITIAL_SPENDING.copy()
+        spending[category] = 100
         spending_list.append(spending)
-
+    print(spending_list)
     return spending_list
 
 
@@ -202,37 +204,46 @@ def create_operators():
     operators = []
 
     for i, spending_item in enumerate(spending_list):
-        name = str(spending_item) # the name of the OPERATOR reflects the blend of strategies implemented. See def create_spending for details
+        name = str(
+            spending_item)  # the name of the OPERATOR reflects the blend of strategies implemented. See def create_spending for details
         operand = lambda state, spending=spending_item: can_spend(state, spending)
         transf = lambda state, spending=spending_item: spend(state, spending)
         operators.append(Operator(name, operand, transf))
 
     return operators
 
+
 'iteration_count is a var that is used to terminate the DFS at a certain depth level. '
 iteration_count = 0
+
+
 def goal_test(state):
     global iteration_count
-    if iteration_count < 10:
+    if iteration_count < 20:
         iteration_count += 1
         return False
     return True
 
-
 def goal_message(state):
     return "We can reduce the outbreak this way: "
+
 
 ''' 
 This function returns a positive integer inverse to how proper a given operator 
 '''
+
+
 def h_heuristics(state):
     return state.data['infected']
 
+
 # Incidence rates related code
-INCIDENCE_RATES = [(114/100000),(70/100000),(40/100000),(20/100000) ]  # incidence rates reflective of Brazil values 2016
+INCIDENCE_RATES = [(114 / 100000), (70 / 100000), (40 / 100000),
+                   (20 / 100000)]  # incidence rates reflective of Brazil values 2016
+
 
 # THE FOLLOWING CODE CALCULATES THE INCIDENCE RATE REDUCTION OF SOME GIVEN STRATGY PASSED BY THE VARIABLE 'SPENDING'
-def reduction_of_rate(SPENDING):        # bookmark@
+def reduction_of_rate(SPENDING):  # bookmark@
     ' each of the following variables is the relative amount of money (and therefore effort) being put towards the eponymous campaign'
     a, b, c, d = SPENDING['clinic'], SPENDING['awareness'], SPENDING['safe_sex'], SPENDING['mosquito']
     ''' the numbers for the reduction rates were derived in the following way:
@@ -253,11 +264,13 @@ def reduction_of_rate(SPENDING):        # bookmark@
      that is then multiplied by the estimated efficacy of the given strategy and added to outcome of the others. 
      
     '''
-    return (a/100) * .15 + (b/100) * .3 + (c/100) * .05 + (d/100) * .08
+    return (a / 100) * .15 + (b / 100) * .3 + (c / 100) * .05 + (d / 100) * .08
+
+
 # </COMMON_CODE>
 
 # <INITIAL_STATE>
-INITIAL_STATE = State({'population': 1000000, 'infected': 0, 'incidence_rate': (114/100000), 'fund': 100000})
+INITIAL_STATE = State(INITIAL_DATA, INITIAL_SPENDING)
 CREATE_INITIAL_STATE = lambda: INITIAL_STATE
 # </INITIAL_STATE>
 
