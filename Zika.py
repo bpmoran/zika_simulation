@@ -1,7 +1,6 @@
 '''
 Brian Moran, Uyen Tran
 Assignment 4 - Wicked Problem - Reducing Zika Virus
-Status: kind of aggrevated 
 '''
 
 
