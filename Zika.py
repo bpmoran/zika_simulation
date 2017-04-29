@@ -23,6 +23,13 @@ PROBLEM_DESC = ""
 
 
 CATEGORIES = ['clinic', 'awareness', 'mosquito', 'safe_sex']  # and maybe 'fundraising'
+DESCRIPTIONS = {
+    'none': 'none',
+    'clinic': 'clinic',
+    'awareness': 'awareness',
+    'mosquito': 'mosquito termination',
+    'safe_sex': 'safe sex practice'
+}
 INITIAL_SPENDING = {category: 0 for category in CATEGORIES}
 INITIAL_DATA = {'population': 1000000, 'infected': 0, 'incidence_rate': (114 / 100000), 'fund': 10000000}
 
@@ -44,7 +51,12 @@ class State:
 
     def __str__(self):
         clone_data = {k: round(v, 2) for k, v in self.data.items()}
-        return 'Status: ' + str(clone_data) + '\nSpending: ' + str(self.spending) + '\n'
+        category = 'none'
+        for c in CATEGORIES:
+            if self.spending[c] == 100:
+                category = c
+                break
+        return 'Status: ' + str(clone_data) + '\nPrevious funding on ' + DESCRIPTIONS[category] + '\n'
 
     def __eq__(self, other):
         if not (type(self) == type(other)):
@@ -288,5 +300,5 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 # </GOAL_MESSAGE_FUNCTION>
 
 # <HEURISTICS>
-HEURISTICS = [h_heuristics]
+HEURISTICS = {'h_heuristics': h_heuristics}
 # </HEURISTICS>
