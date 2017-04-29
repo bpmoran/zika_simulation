@@ -3,12 +3,6 @@ Brian Moran, Uyen Tran
 Assignment 4 - Wicked Problem - Reducing Zika Virus
 '''
 
-'''
-Brian TO DO:
-1) infection functions
-2) h function
-3) .pdf 
-'''
 import math
 
 # <METADATA>
@@ -241,10 +235,9 @@ def goal_message(state):
 
 
 ''' 
-This function returns a positive integer inverse to how proper a given operator 
+This function returns a positive integer inverse to how a given operator performed by returning the number 
+of infected individuals. 
 '''
-
-
 def h_heuristics(state):
     return state.data['infected']
 
