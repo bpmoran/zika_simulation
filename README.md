@@ -9,6 +9,6 @@ Project 4
   
   Files that need to be turned in:  
   who_and_what.py --------------------- done  
-  Our_Wicked_Problem.pdf ------------     
+  Our_Wicked_Problem.pdf ------------ done       
   Zika.py  --------------------------------    
   
